@@ -84,7 +84,6 @@ def pathGraphicsPathFactory(path):
         graphicsPath.MoveToPoint(start.x, start.y)
     else:
         start = points[-1]
-        assert start.type is not None
         graphicsPath.MoveToPoint(start.x, start.y)
     stack = []
     for point in points:
@@ -99,7 +98,9 @@ def pathGraphicsPathFactory(path):
             if point.type == "curve":
                 graphicsPath.AddCurveToPoint(*stack)
                 stack.clear()
-            elif point.type == "qcurve":
+            # If we encounter a qcurve or the entire outline consists of
+            # offcurves, we need to add implied on-curve points.
+            elif point.type == "qcurve" or point is points[-1]:
                 if len(stack) == 1:
                     graphicsPath.AddQuadCurveToPoint(*stack)
                     stack.clear()
