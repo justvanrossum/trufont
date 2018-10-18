@@ -97,14 +97,24 @@ def pathGraphicsPathFactory(path):
             if point.type == "curve":
                 graphicsPath.AddCurveToPoint(*stack)
                 stack.clear()
-            # If we encounter a qcurve or the entire outline consists of
-            # offcurves, we need to add implied on-curve points.
+            #  If we reach here, there are (assuming a valid contour) three
+            #  possible states:
+            #
+            #  1. We have one off-curve on the stack and we are looking at a
+            #     qcurve: simply draw the curve with the control point being the
+            #     off-curve on the stack.
+            #  2. We have more than one off-curve on the stack and are looking at
+            #     a qcurve. Here, TrueType's implied on-curve principle applies
+            #     that requires that an implied on-curve point is inserted
+            #     halfway between all off-curve points. The last off-curve is
+            #     then used as the control-point of the qcurve.
+            #  3. The stack is full of off-curves and we have reached the last
+            #     point. An all off-curve path is to be handled like a quadratic
+            #     path.
             elif point.type == "qcurve" or point is points[-1]:
                 if len(stack) == 1:
                     graphicsPath.AddQuadCurveToPoint(*stack)
                     stack.clear()
-                # If the stack contains just off-curve points, an on-curve
-                # point is implied halfway in-between them all.
                 else:
                     stack_offcurves = trufont.util.misc.grouper(stack, 2)
                     for (cx1, cy1), (cx2, cy2) in trufont.util.misc.pairwise(
