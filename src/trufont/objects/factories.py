@@ -1,5 +1,4 @@
-import itertools
-
+import trufont.util.misc
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 from fontTools.ttLib import TTFont
 from trufont.objects.layoutEngine import LayoutEngine
@@ -107,31 +106,19 @@ def pathGraphicsPathFactory(path):
                 # If the stack contains just off-curve points, an on-curve
                 # point is implied halfway in-between them all.
                 else:
-                    stack_offcurves = grouper(stack, 2)
-                    for (cx1, cy1), (cx2, cy2) in pairwise(stack_offcurves):
-                        graphicsPath.AddQuadCurveToPoint(cx1, cy1, (cx1 + cx2) / 2, (cy1 + cy2) / 2)
+                    stack_offcurves = trufont.util.misc.grouper(stack, 2)
+                    for (cx1, cy1), (cx2, cy2) in trufont.util.misc.pairwise(
+                        stack_offcurves
+                    ):
+                        graphicsPath.AddQuadCurveToPoint(
+                            cx1, cy1, (cx1 + cx2) / 2, (cy1 + cy2) / 2
+                        )
                         last_offcurve = (cx2, cy2)
                     graphicsPath.AddQuadCurveToPoint(*last_offcurve, point.x, point.y)
                 stack.clear()
     if not open_:
         graphicsPath.CloseSubpath()
     return graphicsPath
-
-
-def grouper(iterable, n, fillvalue=None):
-    """Collect data into fixed-length chunks or blocks
-
-    grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-    """
-    args = [iter(iterable)] * n
-    return itertools.zip_longest(*args, fillvalue=fillvalue)
-
-
-def pairwise(iterable):
-    """s -> (s0,s1), (s1,s2), (s2, s3), ..."""
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
 
 
 def registerAllFactories():
